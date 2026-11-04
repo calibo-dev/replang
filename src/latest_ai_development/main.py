@@ -271,7 +271,7 @@ async def _run_cli_workflow(inputs: dict[str, Any]) -> State:
 
 
 def test() -> None:
-    result = asyncio.run(_run_cli_workflow({"user_input": "Latest AI Agent Frameworks"}))
+    result = asyncio.run(_run_cli_workflow({'topic': 'Artificial Intelligence in Healthcare', 'source_credibility_criteria': 'Evaluate credibility based on the quality and consistency of evidence collected, including the reliability of sources and the presence of corroborating information.', 'report_tone_and_style_guidelines': 'The report should be objective, well-organized, business-friendly, and written in clear professional language suitable for decision-makers.', 'data_privacy_and_compliance_details': 'Ensure the research and report generation process respects data privacy, confidentiality, and relevant regulatory compliance constraints.', 'actionable_insights_format': 'Include actionable insights and recommendations clearly identified within the report sections where appropriate, supporting decision-making.', 'topic_scope_and_exclusions': 'Prioritize independent research covering relevant subtopics, themes, trends, opportunities, challenges, risks, stakeholders, and future implications.'}))
     print(json.dumps(result, ensure_ascii=False, default=str))
 
 

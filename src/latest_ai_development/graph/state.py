@@ -1,50 +1,42 @@
-from copy import deepcopy
-from operator import add
-from typing import Annotated, Any, Required, TypedDict
+from typing import TypedDict, NotRequired, Required
 
+class ResearchReport(TypedDict):
+    Executive_Summary: str
+    Research_Methodology: str
+    Topic_Overview: str
+    Key_Findings: str
+    Comparative_Analysis: str
+    Opportunities_and_Benefits: str
+    Risks_and_Challenges: str
+    Emerging_Trends: str
+    Future_Outlook: str
+    Confidence_Assessment: str
+    Conclusion: str
+    Actionable_Insights_and_Recommendations: str
 
-class InputState(TypedDict, total=False):
-    """Public request fields accepted by the workflow."""
+class InputState(TypedDict):
+    topic: Required[str]
+    source_credibility_criteria: Required[str]
+    report_tone_and_style_guidelines: Required[str]
+    data_privacy_and_compliance_details: Required[str]
+    actionable_insights_format: Required[str]
+    topic_scope_and_exclusions: Required[str]
 
-    user_input: Required[str]
-
-
-class OutputState(TypedDict, total=False):
-    """Public response fields returned by the workflow."""
-
-    final_response: str
-    errors: Annotated[list[str], add]
-
+class OutputState(TypedDict):
+    research_report: Required[ResearchReport]
+    status: Required[str]
+    ResearchReportAgent_route: Required[str]
 
 class State(InputState, OutputState, total=False):
-    """Complete state shared by LangGraph nodes."""
+    pass
+INPUT_FIELDS = ('topic', 'source_credibility_criteria', 'report_tone_and_style_guidelines', 'data_privacy_and_compliance_details', 'actionable_insights_format', 'topic_scope_and_exclusions')
+REQUIRED_INPUT_FIELDS = ('topic', 'source_credibility_criteria', 'report_tone_and_style_guidelines', 'data_privacy_and_compliance_details', 'actionable_insights_format', 'topic_scope_and_exclusions')
+OUTPUT_FIELDS = ('research_report', 'status', 'ResearchReportAgent_route')
+_STATE_DEFAULTS = {'status': 'failure', 'ResearchReportAgent_route': 'failure'}
 
-    normalized_feedback: str
-    validation_status: str
-    sentiment: str
-    confidence: str
-    sentiment_reason: str
-    clarification_question: str
-    urgency_score: int
-    policy_risk_score: int
-    draft_response: str
-    policy_guidance: str
-    human_decision: str
-
-
-INPUT_FIELDS = tuple(InputState.__annotations__)
-REQUIRED_INPUT_FIELDS = tuple(
-    field_name for field_name in INPUT_FIELDS if field_name in InputState.__required_keys__
-)
-OUTPUT_FIELDS = tuple(OutputState.__annotations__)
-
-_STATE_DEFAULTS: dict[str, Any] = {
-    "errors": [],
-    "urgency_score": 0,
-    "policy_risk_score": 0,
-}
-
-
-def state_defaults() -> dict[str, Any]:
-    """Return an isolated copy of workflow state defaults for one invocation."""
-    return deepcopy(_STATE_DEFAULTS)
+def state_defaults() -> dict:
+    return _STATE_DEFAULTS.copy()
+InputState.__required_keys__ = frozenset(['actionable_insights_format', 'data_privacy_and_compliance_details', 'report_tone_and_style_guidelines', 'source_credibility_criteria', 'topic', 'topic_scope_and_exclusions'])
+InputState.__optional_keys__ = frozenset([])
+OutputState.__required_keys__ = frozenset(['ResearchReportAgent_route', 'research_report', 'status'])
+OutputState.__optional_keys__ = frozenset([])
