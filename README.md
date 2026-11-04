@@ -275,3 +275,45 @@ agent names.
 Do not edit `graph/graph_builder.py`, `nodes/agent_node_builder.py`,
 `tools/tool_registry.py`, `workflow.py`, `main.py`, model fallback, or tracking for
 ordinary generated workflows.
+
+<!-- BEGIN LANGGRAPH WORKFLOW -->
+# Research Report Generation Workflow
+
+This workflow automates the process of conducting comprehensive research on a user-provided topic and generating a structured research report. It ensures adherence to data privacy and compliance requirements, evaluates source credibility, and formats actionable insights according to user preferences.
+
+## Workflow Overview
+
+- **Entry Node:** `ResearchReportAgent` - An autonomous agent that performs the research and generates the report.
+- **Terminal Nodes:**
+  - `TerminalSuccess` - Outputs the final report and success status.
+  - `TerminalFailure` - Outputs failure status and an empty report.
+
+## Input Parameters
+
+- `topic`: The research topic provided by the user.
+- `source_credibility_criteria`: Criteria for assessing the reliability of sources.
+- `report_tone_and_style_guidelines`: Guidelines for the tone and style of the report.
+- `data_privacy_and_compliance_details`: Privacy and compliance requirements.
+- `actionable_insights_format`: Format preferences for actionable insights.
+- `topic_scope_and_exclusions`: Boundaries and exclusions for the research topic.
+
+## Output
+
+- `research_report`: A structured object containing all required sections of the research report.
+- `status`: Indicates success or failure of the report generation.
+
+## Configuration
+
+- Requires Snowflake connection credentials set in environment variables:
+  - `SNOWFLAKE_ACCOUNT`
+  - `SNOWFLAKE_USER`
+  - `SNOWFLAKE_PASSWORD`
+  - `SNOWFLAKE_ROLE`
+  - `SNOWFLAKE_WAREHOUSE`
+  - `SNOWFLAKE_DATABASE`
+  - `SNOWFLAKE_SCHEMA`
+
+## Usage
+
+Invoke the workflow with the required input parameters to receive a comprehensive research report.
+<!-- END LANGGRAPH WORKFLOW -->

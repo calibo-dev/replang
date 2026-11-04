@@ -1,226 +1,389 @@
 graph:
-  graph_id: customer_feedback_response_workflow
-  description: Validate, classify, route, and respond to customer feedback.
-  entry_node: prepare_feedback
+  graph_id: null
+  description: null
+  entry_node: ResearchReportAgent
   end_nodes:
-    - finalize_output
-  final_output_field: final_response
-
+    - TerminalSuccess
+    - TerminalFailure
   nodes:
-    - node_id: prepare_feedback
-      node_type: deterministic
-      agent_name: null
-      operation_type: input_validation
+    - node_id: ResearchReportAgent
+      node_type: agent
+      agent_name: ResearchReportAgent
+      operation_type: null
       execution_mode: null
-      description: Validate and normalize incoming customer feedback.
+      description: Agent performs autonomous comprehensive research and generates the structured research report with all required sections, respecting data privacy and compliance constraints.
       reads_state:
-        - user_input
+        - topic
+        - source_credibility_criteria
+        - report_tone_and_style_guidelines
+        - data_privacy_and_compliance_details
+        - actionable_insights_format
+        - topic_scope_and_exclusions
       writes_state:
-        - normalized_feedback
-        - validation_status
-        - errors
+        - research_report
+        - status
+        - ResearchReportAgent_route
+      is_conditional: true
+      structured_output: true
+      routing_rules:
+        - route_key: success
+          target: TerminalSuccess
+          description: null
+        - route_key: failure
+          target: TerminalFailure
+          description: null
       metadata:
-        parameters:
-          required: true
-          min_length: 4
-
-    - node_id: classify_sentiment
+        user_interaction: null
+        decision_contract: false
+        operation: null
+    - node_id: TerminalSuccess
       node_type: agent
-      agent_name: sentiment_classifier
+      agent_name: TerminalSuccessResponder
       operation_type: null
       execution_mode: null
-      description: Classify feedback sentiment and confidence.
+      description: Terminal node for successful report generation, outputs the final research report and status.
       reads_state:
-        - normalized_feedback
+        - research_report
+        - status
       writes_state:
-        - sentiment
-        - confidence
-        - sentiment_reason
-      metadata: {}
-
-    - node_id: evaluate_feedback
-      node_type: deterministic
-      agent_name: null
-      operation_type: feedback_scoring
-      execution_mode: null
-      description: Calculate deterministic urgency and policy-risk scores.
-      reads_state:
-        - normalized_feedback
-        - sentiment
-        - confidence
-      writes_state:
-        - urgency_score
-        - policy_risk_score
+        - research_report
+        - status
+      is_conditional: false
+      structured_output: true
+      routing_rules: []
       metadata:
-        parameters:
-          score_range:
-            minimum: 0
-            maximum: 100
-
-    - node_id: appreciation_response
+        user_interaction: null
+        decision_contract: false
+        operation: null
+    - node_id: TerminalFailure
       node_type: agent
-      agent_name: appreciation_responder
+      agent_name: TerminalFailureResponder
       operation_type: null
       execution_mode: null
-      description: Produce an appreciation response.
+      description: Terminal node for failure in report generation, outputs failure status and empty report.
       reads_state:
-        - normalized_feedback
-        - sentiment_reason
+        - status
       writes_state:
-        - final_response
-      metadata: {}
-
-    - node_id: clarification_response
-      node_type: agent
-      agent_name: clarification_responder
-      operation_type: null
-      execution_mode: null
-      description: Generate a focused clarification question for unclear feedback.
-      reads_state:
-        - normalized_feedback
-        - sentiment
-        - confidence
-      writes_state:
-        - clarification_question
-      metadata: {}
-
-    - node_id: request_clarification
-      node_type: deterministic
-      agent_name: null
-      operation_type: clarification_interrupt
-      execution_mode: null
-      description: Pause for clarification and add the answer to the feedback context.
-      reads_state:
-        - normalized_feedback
-        - clarification_question
-      writes_state:
-        - normalized_feedback
-        - clarification_question
+        - research_report
+        - status
+      is_conditional: false
+      structured_output: true
+      routing_rules: []
       metadata:
-        parameters:
-          resume_required: true
-
-    - node_id: service_recovery_response
-      node_type: agent
-      agent_name: service_recovery_responder
-      operation_type: null
-      execution_mode: null
-      description: Draft an empathetic service-recovery response.
-      reads_state:
-        - normalized_feedback
-        - sentiment_reason
-        - urgency_score
-      writes_state:
-        - draft_response
-      metadata: {}
-
-    - node_id: policy_guidance
-      node_type: agent
-      agent_name: policy_advisor
-      operation_type: null
-      execution_mode: null
-      description: Apply policy guidance to the response.
-      reads_state:
-        - normalized_feedback
-        - draft_response
-        - policy_risk_score
-      writes_state:
-        - policy_guidance
-        - final_response
-      metadata: {}
-
-    - node_id: human_review
-      node_type: deterministic
-      agent_name: null
-      operation_type: human_review_interrupt
-      execution_mode: null
-      description: Pause high-risk feedback for an approved response.
-      reads_state:
-        - normalized_feedback
-        - sentiment
-        - urgency_score
-        - policy_risk_score
-      writes_state:
-        - human_decision
-        - final_response
-      metadata:
-        parameters:
-          resume_required: true
-
-    - node_id: finalize_output
-      node_type: deterministic
-      agent_name: null
-      operation_type: response_formatting
-      execution_mode: null
-      description: Produce the final public response from response or error state.
-      reads_state:
-        - errors
-        - final_response
-      writes_state:
-        - final_response
-      metadata: {}
-
-  edges:
-    - source: classify_sentiment
-      target: evaluate_feedback
-      description: Pass sentiment analysis to deterministic evaluation.
-    - source: appreciation_response
-      target: finalize_output
-      description: Format the appreciation response.
-    - source: clarification_response
-      target: request_clarification
-      description: Ask the generated clarification question.
-    - source: request_clarification
-      target: classify_sentiment
-      description: Reclassify feedback with the customer's clarification.
-    - source: service_recovery_response
-      target: policy_guidance
-      description: Apply policy guidance to the recovery response.
-    - source: policy_guidance
-      target: finalize_output
-      description: Format the policy-aware response.
-    - source: human_review
-      target: finalize_output
-      description: Format the approved high-risk response.
+        user_interaction: null
+        decision_contract: false
+        operation: null
+  edges: []
   conditional_edges:
-    - source: prepare_feedback
-      decision_field: validation_status
-      description: Route according to input validation.
+    - source: ResearchReportAgent
+      decision_field: ResearchReportAgent_route
       routes:
-        - route_key: valid
-          target: classify_sentiment
-          description: Continue with valid feedback.
-        - route_key: invalid
-          target: finalize_output
-          description: Return the validation error.
-    - source: evaluate_feedback
-      router: evaluate_feedback
-      description: Route according to sentiment and risk scores.
-      routes:
-        - route_key: appreciation
-          target: appreciation_response
-          description: Generate an appreciation response.
-        - route_key: clarification
-          target: clarification_response
-          description: Request clarification before responding.
-        - route_key: service_recovery
-          target: service_recovery_response
-          description: Start service recovery.
-        - route_key: human_review
-          target: human_review
-          description: Request approval for a high-risk response.
-
-persistence:
-  enabled: true
-  backend: memory
-
-execution:
-  save_output: false
-  resume_enabled: true
-
-runtime_context:
-  defaults: {}
-
+        - route_key: success
+          target: TerminalSuccess
+          description: null
+        - route_key: failure
+          target: TerminalFailure
+          description: null
+      description: null
+      cases: []
+      default_route: null
+  input_schema:
+    type: object
+    properties:
+      topic:
+        type: string
+        description: The user-provided research topic for the report.
+      source_credibility_criteria:
+        type: string
+        description: Criteria to assess the credibility and reliability of research sources.
+      report_tone_and_style_guidelines:
+        type: string
+        description: Preferred tone, style, and formality level for the report.
+      data_privacy_and_compliance_details:
+        type: string
+        description: Data privacy, confidentiality, and regulatory compliance requirements for research and report generation.
+      actionable_insights_format:
+        type: string
+        description: Preferred format for presenting actionable insights and recommendations within the report.
+      topic_scope_and_exclusions:
+        type: string
+        description: Boundaries of the research topic including focus areas and exclusions.
+    required:
+      - topic
+      - source_credibility_criteria
+      - report_tone_and_style_guidelines
+      - data_privacy_and_compliance_details
+      - actionable_insights_format
+      - topic_scope_and_exclusions
+  output_schema:
+    type: object
+    properties:
+      research_report:
+        type: object
+        description: The structured comprehensive research report including all required sections and actionable insights.
+        properties:
+          Executive Summary:
+            type: string
+          Research Methodology:
+            type: string
+          Topic Overview:
+            type: string
+          Key Findings:
+            type: string
+          Comparative Analysis:
+            type: string
+          Opportunities and Benefits:
+            type: string
+          Risks and Challenges:
+            type: string
+          Emerging Trends:
+            type: string
+          Future Outlook:
+            type: string
+          Confidence Assessment:
+            type: string
+          Conclusion:
+            type: string
+          Actionable Insights and Recommendations:
+            type: string
+        required:
+          - Executive Summary
+          - Research Methodology
+          - Topic Overview
+          - Key Findings
+          - Comparative Analysis
+          - Opportunities and Benefits
+          - Risks and Challenges
+          - Emerging Trends
+          - Future Outlook
+          - Confidence Assessment
+          - Conclusion
+          - Actionable Insights and Recommendations
+        additionalProperties: false
+      status:
+        type: string
+        description: Status message indicating success or failure of the report generation.
+        enum:
+          - success
+          - failure
+      ResearchReportAgent_route:
+        type: string
+        description: Routing field for the ResearchReportAgent outcomes.
+        enum:
+          - success
+          - failure
+    required:
+      - research_report
+      - status
+      - ResearchReportAgent_route
+  state_contract:
+    fields:
+      topic:
+        name: null
+        path: null
+        description: The user-provided research topic for the report.
+        field_type: null
+        reducer: replace
+        default: null
+        item_type: null
+        custom_reducer: null
+        required: true
+        mutable: null
+        source: caller
+        metadata: {}
+        type: string
+        json_schema:
+          type: string
+      source_credibility_criteria:
+        name: null
+        path: null
+        description: Criteria to assess the credibility and reliability of research sources.
+        field_type: null
+        reducer: replace
+        default: Evaluate credibility based on the quality and consistency of evidence collected, including the reliability of sources and the presence of corroborating information.
+        item_type: null
+        custom_reducer: null
+        required: true
+        mutable: null
+        source: caller
+        metadata: {}
+        type: string
+        json_schema:
+          type: string
+      report_tone_and_style_guidelines:
+        name: null
+        path: null
+        description: Preferred tone, style, and formality level for the report.
+        field_type: null
+        reducer: replace
+        default: The report should be objective, well-organized, business-friendly, and written in clear professional language suitable for decision-makers.
+        item_type: null
+        custom_reducer: null
+        required: true
+        mutable: null
+        source: caller
+        metadata: {}
+        type: string
+        json_schema:
+          type: string
+      data_privacy_and_compliance_details:
+        name: null
+        path: null
+        description: Data privacy, confidentiality, and regulatory compliance requirements for research and report generation.
+        field_type: null
+        reducer: replace
+        default: Ensure the research and report generation process respects data privacy, confidentiality, and relevant regulatory compliance constraints.
+        item_type: null
+        custom_reducer: null
+        required: true
+        mutable: null
+        source: caller
+        metadata: {}
+        type: string
+        json_schema:
+          type: string
+      actionable_insights_format:
+        name: null
+        path: null
+        description: Preferred format for presenting actionable insights and recommendations within the report.
+        field_type: null
+        reducer: replace
+        default: Include actionable insights and recommendations clearly identified within the report sections where appropriate, supporting decision-making.
+        item_type: null
+        custom_reducer: null
+        required: true
+        mutable: null
+        source: caller
+        metadata: {}
+        type: string
+        json_schema:
+          type: string
+      topic_scope_and_exclusions:
+        name: null
+        path: null
+        description: Boundaries of the research topic including focus areas and exclusions.
+        field_type: null
+        reducer: replace
+        default: Prioritize independent research covering relevant subtopics, themes, trends, opportunities, challenges, risks, stakeholders, and future implications.
+        item_type: null
+        custom_reducer: null
+        required: true
+        mutable: null
+        source: caller
+        metadata: {}
+        type: string
+        json_schema:
+          type: string
+      research_report:
+        name: null
+        path: null
+        description: The structured comprehensive research report including all required sections and actionable insights.
+        field_type: null
+        reducer: replace
+        default: null
+        item_type: null
+        custom_reducer: null
+        required: true
+        mutable: null
+        source: multiple:ResearchReportAgent,TerminalSuccessResponder,TerminalFailureResponder
+        metadata: {}
+        type: object
+        json_schema:
+          type: object
+          properties:
+            Executive Summary:
+              type: string
+            Research Methodology:
+              type: string
+            Topic Overview:
+              type: string
+            Key Findings:
+              type: string
+            Comparative Analysis:
+              type: string
+            Opportunities and Benefits:
+              type: string
+            Risks and Challenges:
+              type: string
+            Emerging Trends:
+              type: string
+            Future Outlook:
+              type: string
+            Confidence Assessment:
+              type: string
+            Conclusion:
+              type: string
+            Actionable Insights and Recommendations:
+              type: string
+          required:
+            - Executive Summary
+            - Research Methodology
+            - Topic Overview
+            - Key Findings
+            - Comparative Analysis
+            - Opportunities and Benefits
+            - Risks and Challenges
+            - Emerging Trends
+            - Future Outlook
+            - Confidence Assessment
+            - Conclusion
+            - Actionable Insights and Recommendations
+          additionalProperties: false
+      status:
+        name: null
+        path: null
+        description: Status message indicating success or failure of the report generation.
+        field_type: null
+        reducer: replace
+        default: null
+        item_type: null
+        custom_reducer: null
+        required: true
+        mutable: null
+        source: multiple:ResearchReportAgent,TerminalSuccessResponder,TerminalFailureResponder
+        metadata: {}
+        type: string
+        json_schema:
+          type: string
+        enum:
+          - success
+          - failure
+      ResearchReportAgent_route:
+        name: null
+        path: null
+        description: Routing field for the ResearchReportAgent outcomes.
+        field_type: null
+        reducer: replace
+        default: null
+        item_type: null
+        custom_reducer: null
+        required: true
+        mutable: null
+        source: ResearchReportAgent
+        metadata: {}
+        type: string
+        json_schema:
+          type: string
+        enum:
+          - success
+          - failure
+    status_values_used_for_routing:
+      - success
+      - failure
+    objects: {}
+  output_mapping:
+    research_report: research_report
+    status: status
+    ResearchReportAgent_route: ResearchReportAgent_route
+  final_output_field: research_report
+  metadata: {}
+  execution_contract_version: 2
+  loops: []
+  persistence:
+    enabled: false
+    backend: memory
+  execution:
+    resume_enabled: false
 tracing:
   workflow:
     enabled: true
@@ -231,9 +394,16 @@ tracing:
       - langgraph
     metadata:
       workflow_name: customer_feedback_response
-      workflow_version: "1.0"
+      workflow_version: '1.0'
     input_fields:
       flow_run_id: flow_run_id
-      user_input: inputs.user_input
+      topic: inputs.topic
+      source_credibility_criteria: inputs.source_credibility_criteria
+      report_tone_and_style_guidelines: inputs.report_tone_and_style_guidelines
+      data_privacy_and_compliance_details: inputs.data_privacy_and_compliance_details
+      actionable_insights_format: inputs.actionable_insights_format
+      topic_scope_and_exclusions: inputs.topic_scope_and_exclusions
     output_fields:
-      final_response: final_response
+      research_report: research_report
+      status: status
+      ResearchReportAgent_route: ResearchReportAgent_route
